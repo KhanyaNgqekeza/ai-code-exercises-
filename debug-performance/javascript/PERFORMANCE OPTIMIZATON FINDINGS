@@ -1,0 +1,163 @@
+I have a database query that's running very slowly. I'd like to understand why and how to optimize it.
+
+Here's the slow query:
+
+SELECT
+  o.order_id,
+  o.order_date,
+  o.total_amount,
+  o.status,
+  c.customer_name,
+  c.email,
+
+  (
+    SELECT json_agg(
+      json_build_object(
+        'product_id', p.product_id,
+        'product_name', p.name,
+        'quantity', oi.quantity,
+        'unit_price', p.price,
+        'subtotal', (oi.quantity * p.price)
+      )
+    )
+    FROM order_items oi
+    JOIN products p ON oi.product_id = p.product_id
+    WHERE oi.order_id = o.order_id
+  ) as items,
+
+  (
+    SELECT json_agg(
+      json_build_object(
+        'status', s.status,
+        'date', s.status_date,
+        'notes', s.notes
+      )
+    )
+    FROM order_status_history s
+    WHERE s.order_id = o.order_id
+    ORDER BY s.status_date DESC
+  ) as status_history,
+
+  a.street,
+  a.city,
+  a.state,
+  a.postal_code,
+  a.country
+
+FROM orders o
+JOIN customers c ON o.customer_id = c.customer_id
+LEFT JOIN addresses a ON o.shipping_address_id = a.address_id
+WHERE o.customer_id = $1
+  AND o.order_date BETWEEN $2 AND $3
+ORDER BY o.order_date DESC;
+
+Database context:
+
+Database type: PostgreSQL 13
+Table sizes:
+orders: 100,000 rows
+order_items: 500,000 rows
+order_status_history: 300,000 rows
+customers: 10,000 rows
+addresses: 15,000 rows
+Table structure:
+orders(order_id, customer_id, order_date, total_amount, status, shipping_address_id)
+order_items(order_id, product_id, quantity)
+products(product_id, name, price)
+order_status_history(order_id, status, status_date, notes)
+Existing indexes: primary keys only
+When slowness occurs: all the time, especially for customers with many orders
+Approximate execution time: 8–10 seconds
+
+Could you please:
+
+Explain in simple terms why this query might be slow
+This query is slow because it repeatedly runs extra subqueries for every order. For each order row, the database must fetch order items and status history again. This repeated work makes the query much slower as the number of orders increases.
+Identify specific parts of the query that are likely causing performance issues
+The main performance issue is the correlated subqueries inside the SELECT statement:
+The order_items subquery runs once per order
+The order_status_history subquery runs once per order
+These cause repeated scans of large tables.
+Also, missing indexes on order_id, customer_id, and order_date forces full table scans.
+Suggest improvements to make the query faster (both query rewrites and potential indexes)
+
+Add indexes:
+
+CREATE INDEX idx_orders_customer_date ON orders(customer_id, order_date);
+CREATE INDEX idx_order_items_order_id ON order_items(order_id);
+CREATE INDEX idx_status_order_id ON order_status_history(order_id);
+
+Rewrite query using pre-aggregation (CTEs):
+
+WITH items AS (
+  SELECT
+    oi.order_id,
+    json_agg(
+      json_build_object(
+        'product_id', p.product_id,
+        'product_name', p.name,
+        'quantity', oi.quantity,
+        'unit_price', p.price,
+        'subtotal', oi.quantity * p.price
+      )
+    ) AS items
+  FROM order_items oi
+  JOIN products p ON p.product_id = oi.product_id
+  GROUP BY oi.order_id
+),
+status AS (
+  SELECT
+    s.order_id,
+    json_agg(
+      json_build_object(
+        'status', s.status,
+        'date', s.status_date,
+        'notes', s.notes
+      )
+      ORDER BY s.status_date DESC
+    ) AS status_history
+  FROM order_status_history s
+  GROUP BY s.order_id
+)
+SELECT
+  o.order_id,
+  o.order_date,
+  o.total_amount,
+  o.status,
+  c.customer_name,
+  c.email,
+  i.items,
+  s.status_history,
+  a.street,
+  a.city,
+  a.state,
+  a.postal_code,
+  a.country
+FROM orders o
+JOIN customers c ON o.customer_id = c.customer_id
+LEFT JOIN addresses a ON o.shipping_address_id = a.address_id
+LEFT JOIN items i ON i.order_id = o.order_id
+LEFT JOIN status s ON s.order_id = o.order_id
+WHERE o.customer_id = $1
+  AND o.order_date BETWEEN $2 AND $3
+ORDER BY o.order_date DESC;
+
+Add pagination:
+
+LIMIT 50 OFFSET 0
+Explain the database concepts I should learn to write better queries
+Correlated subqueries cause repeated execution per row
+N+1 query problem in SQL causes major slowdown
+Indexes allow fast lookups instead of full table scans
+Query execution plans determine how SQL is executed
+Pre-aggregation is faster than repeated per-row computation
+Pagination prevents loading excessive data
+Suggest how I could measure the query performance before and after changes
+Use:
+EXPLAIN ANALYZE <query>
+
+Check for:
+
+Seq Scan (slow)
+Index Scan (fast)
+Time per operation
