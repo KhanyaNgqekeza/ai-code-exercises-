@@ -1,0 +1,149 @@
+Bug Analysis and Verification: Merge Sort Implementation
+Buggy Sorting Function
+function mergeSort(arr) {
+  if (arr.length <= 1) return arr;
+
+  const mid = Math.floor(arr.length / 2);
+  const left = mergeSort(arr.slice(0, mid));
+  const right = mergeSort(arr.slice(mid));
+
+  return merge(left, right);
+}
+
+function merge(left, right) {
+  let result = [];
+  let i = 0;
+  let j = 0;
+
+  while (i < left.length && j < right.length) {
+    if (left[i] < right[j]) {
+      result.push(left[i]);
+      i++;
+    } else {
+      result.push(right[j]);
+      j++;
+    }
+  }
+
+  while (i < left.length) {
+    result.push(left[i]);
+    j++; // BUG: should be i++
+  }
+
+  while (j < right.length) {
+    result.push(right[j]);
+    j++;
+  }
+
+  return result;
+}
+1. Collaborative Solution Verification
+
+I first analyzed the logic as if I were working with another developer or AI assistant.
+
+Observations:
+The recursive mergeSort structure is correct
+The bug is isolated in the merge function
+One pointer is incorrectly incremented (j++ instead of i++)
+Verified Issue:
+
+The left-side remaining elements loop is incorrect:
+
+while (i < left.length) {
+  result.push(left[i]);
+  j++; // incorrect
+}
+
+This causes:
+
+infinite loop risk OR incorrect merge behavior
+corrupted sorting results
+Correct understanding:
+i tracks left array
+j tracks right array
+each loop must increment its own pointer
+2. Learning Through Alternative Approaches
+
+I tested mental models of merge sort:
+
+Approach A: Standard merge logic
+Always consume smallest element
+Then append leftovers from left/right
+Approach B: Two-pointer validation
+i must move only when reading left
+j must move only when reading right
+Key insight:
+
+Merge sort correctness depends entirely on pointer consistency
+
+So:
+
+wrong pointer increment = broken algorithm
+even if recursion is correct
+3. Developing a Critical Eye (Code Review Perspective)
+Red flags identified:
+❌ Wrong pointer increment in leftover loop
+❌ Asymmetry between left/right handling
+⚠️ No safeguard for infinite loop detection
+⚠️ Logic inconsistency in merge termination phase
+What a reviewer would say:
+
+“This implementation fails correctness in boundary conditions (leftover merging phase).”
+
+4. Corrected Verified Solution
+Fixed mergeSort implementation:
+function mergeSort(arr) {
+  if (arr.length <= 1) return arr;
+
+  const mid = Math.floor(arr.length / 2);
+  const left = mergeSort(arr.slice(0, mid));
+  const right = mergeSort(arr.slice(mid));
+
+  return merge(left, right);
+}
+
+function merge(left, right) {
+  let result = [];
+  let i = 0;
+  let j = 0;
+
+  while (i < left.length && j < right.length) {
+    if (left[i] < right[j]) {
+      result.push(left[i]);
+      i++;
+    } else {
+      result.push(right[j]);
+      j++;
+    }
+  }
+
+  // FIXED: correct pointer usage
+  while (i < left.length) {
+    result.push(left[i]);
+    i++;
+  }
+
+  while (j < right.length) {
+    result.push(right[j]);
+    j++;
+  }
+
+  return result;
+}
+5. Verification Process Summary
+Step 1: Logical validation
+Checked recursion correctness
+Confirmed divide phase is correct
+Step 2: Manual trace simulation
+
+Example input:
+
+[3, 1, 4, 2]
+
+Confirmed:
+
+split works correctly
+merge fails only at leftover stage in buggy version
+Step 3: Pointer tracking analysis
+Verified i and j must move independently
+Identified incorrect increment as root cause
