@@ -1,0 +1,185 @@
+//Refactored CODE
+
+/**
+ * ==========================================
+ * SHIPPING STRATEGIES
+ * ==========================================
+ */
+
+class StandardShippingStrategy {
+  calculate(packageDetails, destinationCountry) {
+    const { weight, length, width, height } = packageDetails;
+    let cost = 0;
+
+    const rates = { USA: 2.5, Canada: 3.5, Mexico: 4.0 };
+    const baseRate = rates[destinationCountry] || 4.5; // Default to International
+    cost = weight * baseRate;
+
+    // Dimensional weight adjustment
+    const volume = length * width * height;
+    if (weight < 2 && volume > 1000) {
+      cost += 5.0;
+    }
+
+    return cost;
+  }
+}
+
+class ExpressShippingStrategy {
+  calculate(packageDetails, destinationCountry) {
+    const { weight, length, width, height } = packageDetails;
+    let cost = 0;
+
+    const rates = { USA: 4.5, Canada: 5.5, Mexico: 6.0 };
+    const baseRate = rates[destinationCountry] || 7.5;
+    cost = weight * baseRate;
+
+    // Large package surcharge
+    const volume = length * width * height;
+    if (volume > 5000) {
+      cost += 15.0;
+    }
+
+    return cost;
+  }
+}
+
+class OvernightShippingStrategy {
+  calculate(packageDetails, destinationCountry) {
+    const { weight } = packageDetails;
+    
+    const rates = { USA: 9.5, Canada: 12.5 };
+    if (!rates[destinationCountry]) {
+      return "Overnight shipping not available for this destination";
+    }
+
+    return weight * rates[destinationCountry];
+  }
+}
+
+/**
+ * ==========================================
+ * CONTEXT (Shipping Cost Calculator)
+ * ==========================================
+ */
+class ShippingCostCalculator {
+  constructor() {
+    // Strategy Registry mapping keywords to algorithmic implementations
+    this.strategies = {
+      standard: new StandardShippingStrategy(),
+      express: new ExpressShippingStrategy(),
+      overnight: new OvernightShippingStrategy()
+    };
+  }
+
+  calculate(packageDetails, destinationCountry, shippingMethod) {
+    const strategy = this.strategies[shippingMethod];
+
+    if (!strategy) {
+      return "Unknown shipping method profile";
+    }
+
+    const output = strategy.calculate(packageDetails, destinationCountry);
+
+    // Ensure we preserve the precise return type format (string with 2 decimals)
+    // if the strategy returned a valid numeric cost.
+    return typeof output === 'number' ? output.toFixed(2) : output;
+  }
+}
+
+// Instantiate the context for use
+const shippingCalculator = new ShippingCostCalculator();
+
+//VERIFICATION TEST
+function runTestSuite() {
+  console.log("--- Starting Strategy Pattern Unit Tests ---");
+  let passed = 0;
+  let failed = 0;
+
+  const assert = (testName, actual, expected) => {
+    if (actual === expected) {
+      console.log(`✅ Passed: ${testName}`);
+      passed++;
+    } else {
+      console.error(`❌ Failed: ${testName} | Expected: "${expected}", Got: "${actual}"`);
+      failed++;
+    }
+  };
+
+  const samplePackage = { weight: 5, length: 10, width: 10, height: 10 };
+  const lightBulkyPackage = { weight: 1, length: 20, width: 10, height: 10 }; // Vol = 2000
+
+  // Test 1: Original Sample Case 1
+  assert(
+    "Standard Shipping to USA",
+    shippingCalculator.calculate(samplePackage, 'USA', 'standard'),
+    "12.50"
+  );
+
+  // Test 2: Original Sample Case 2
+  assert(
+    "Express Shipping to Canada",
+    shippingCalculator.calculate(samplePackage, 'Canada', 'express'),
+    "27.50"
+  );
+
+  // Test 3: Strategy Constraint Check (Standard dimensional surcharge)
+  assert(
+    "Standard Dimensional Surcharge check",
+    shippingCalculator.calculate(lightBulkyPackage, 'USA', 'standard'),
+    "7.50" // (1 * 2.5) + 5.00 surcharge
+  );
+
+  // Test 4: Overnight Country Restrictions
+  assert(
+    "Overnight Country Restriction handling",
+    shippingCalculator.calculate(samplePackage, 'Mexico', 'overnight'),
+    "Overnight shipping not available for this destination"
+  );
+
+  // Test 5: Graceful fallback for non-existent strategy
+  assert(
+    "Handling unsupported method keys gracefully",
+    shippingCalculator.calculate(samplePackage, 'USA', 'teleportation'),
+    "Unknown shipping method profile"
+  );
+
+  console.log(`\n--- Summary: ${passed} passed, ${failed} failed ---`);
+}
+
+runTestSuite();
+
+/* DOCUMENTATION
+
+1. Adherence to the Open/Closed Principle (OCP)
+In the original design, introducing a new shipping option (such as "Economy Ground") or modifying an existing rule meant altering the core calculateShippingCost function itself. This risk-prone approach could inadvertently break unrelated shipping logic.
+
+With the Strategy pattern, the code is open for extension but closed for modification:
+
+To add a new method: You simply write a standalone class (e.g., GroundShippingStrategy) and register it.
+
+To modify existing logic: If Express shipping rates change, you only edit the ExpressShippingStrategy class. The rest of the application remains untouched and safe from regression bugs.
+
+2. Radical Reduction in Complexity
+The original code suffered from high cyclomatic complexity—a metric representing the number of linear execution paths through a program. Nested if-else blocks handle method verification, country checking, and package size constraints all at once, creating a dense cognitive load.
+
+By isolating each algorithm into its own strategy object, the deep nesting disappears. The context wrapper utilizes clean object lookups to route execution dynamically:
+
+JavaScript
+const strategy = this.strategies[shippingMethod];
+This eliminates the maintenance headache of long, branching control flows.
+
+3. Isolated and Highly Targetable Unit Testing
+Testing a function requires creating complex mock data inputs to satisfy dozens of distinct branching combinations simultaneously.
+
+
+
+You can write independent unit tests that validate the OvernightShippingStrategy directly, passing mock packages straight to its calculate method.
+
+There is no longer a need to execute or worry about the side effects of standard or express logic branches during that test run.
+
+4. Reusability and Clean Separation of Concerns
+The high-level task (knowing when and how to output a formatted shipping charge) is now fully separated from the low-level business rules (knowing how to calculate regional weight surcharges).
+
+Because these strategies are self-contained objects, they can be easily reused across other areas of an application. For instance, if an e-commerce checkout page needs to preview individual shipping method costs before a user selects one, it can query the specific strategy classes directly without invoking the entire orchestration pipeline.*/
+

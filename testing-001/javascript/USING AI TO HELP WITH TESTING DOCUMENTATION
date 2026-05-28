@@ -1,0 +1,169 @@
+TASK PRIORITIZATION SYSTEM — TESTING DOCUMENT
+✅ PART 1: TEST PLAN DOCUMENT
+🔗 System Overview
+
+Functions under test:
+
+calculateTaskScore(task)
+sortTasksByImportance(tasks)
+getTopPriorityTasks(tasks, limit)
+Dependency Flow:
+calculateTaskScore → sortTasksByImportance → getTopPriorityTasks
+🧪 Types of Tests
+✔ Unit Tests
+calculateTaskScore (priority, tags, status, due date, update time)
+✔ Integration Tests
+Full pipeline behavior (sorting + selection)
+✔ Edge Case Tests
+missing fields
+invalid values
+empty arrays
+tie scores
+📊 Test Priority
+🔴 High Priority
+priority scoring correctness
+sorting order correctness
+top-N selection correctness
+🟡 Medium Priority
+due date boundaries
+tag bonuses
+status penalties
+🟢 Edge Cases
+missing data
+invalid input types
+empty lists
+📌 Expected Outcomes
+highest score tasks appear first
+DONE tasks are deprioritized
+system handles missing data safely
+top-N limit works correctly
+✅ PART 2: IMPROVED UNIT TESTS
+🧪 Basic scoring test
+test("returns correct base score for MEDIUM priority", () => {
+  const task = {
+    priority: "MEDIUM",
+    status: "TODO",
+    tags: [],
+    updatedAt: new Date(),
+    dueDate: null
+  };
+
+  const result = calculateTaskScore(task);
+
+  expect(result).toBe(20);
+});
+🧪 Due date test
+test("applies overdue bonus correctly", () => {
+  const task = {
+    priority: "LOW",
+    status: "TODO",
+    tags: [],
+    updatedAt: new Date(),
+    dueDate: new Date("2025-01-01")
+  };
+
+  const result = calculateTaskScore(task);
+
+  expect(result).toBe(40); // 10 base + 30 overdue
+});
+🧪 Edge case test
+test("handles missing fields safely", () => {
+  const task = {
+    priority: "HIGH"
+  };
+
+  const result = calculateTaskScore(task);
+
+  expect(typeof result).toBe("number");
+});
+✅ PART 3: TDD IMPLEMENTATION
+🟥 Step 1: Failing Test
+test("adds +12 bonus for tasks assigned to current user", () => {
+  const task = {
+    priority: "MEDIUM",
+    assignedTo: "user_1"
+  };
+
+  const score = calculateTaskScore(task, "user_1");
+
+  expect(score).toBe(32);
+});
+🟩 Step 2: Minimal Implementation
+function calculateTaskScore(task, currentUserId) {
+  const weights = {
+    LOW: 1,
+    MEDIUM: 2,
+    HIGH: 3,
+    URGENT: 4
+  };
+
+  let score = (weights[task.priority] || 0) * 10;
+
+  if (task.assignedTo === currentUserId) {
+    score += 12;
+  }
+
+  return score;
+}
+🟦 Step 3: Refactor
+function getBaseScore(task, weights) {
+  return (weights[task.priority] || 0) * 10;
+}
+
+function getAssignedBonus(task, userId) {
+  return task.assignedTo === userId ? 12 : 0;
+}
+
+function calculateTaskScore(task, userId) {
+  const weights = { LOW: 1, MEDIUM: 2, HIGH: 3, URGENT: 4 };
+
+  return getBaseScore(task, weights) + getAssignedBonus(task, userId);
+}
+🧪 Additional TDD Edge Test
+test("does not crash when assignedTo is missing", () => {
+  const task = { priority: "MEDIUM" };
+
+  const result = calculateTaskScore(task, "user_1");
+
+  expect(result).toBe(20);
+});
+✅ PART 4: INTEGRATION TEST
+test("full system correctly ranks and returns top tasks", () => {
+  const tasks = [
+    { id: 1, priority: "LOW", status: "TODO", tags: [] },
+    { id: 2, priority: "URGENT", status: "TODO", tags: ["critical"] },
+    { id: 3, priority: "MEDIUM", status: "DONE", tags: [] }
+  ];
+
+  const result = getTopPriorityTasks(tasks, 2);
+
+  expect(result.length).toBe(2);
+  expect(result[0].id).toBe(2);
+  expect(result.some(t => t.id === 3)).toBe(false);
+});
+🧠 PART 5: REFLECTION
+📌 What I learned about testing
+1. Unit testing is about behavior, not logic
+
+I learned that I should test outputs, not internal calculations.
+
+2. Integration tests are about system flow
+
+Instead of testing formulas, I tested:
+
+“Does the whole system produce correct rankings?”
+
+3. TDD improves design
+
+Writing tests first forced me to:
+
+simplify functions
+separate concerns
+avoid overcomplicated logic
+4. Edge cases are where most bugs live
+
+Missing fields, invalid dates, and boundary values are critical.
+
+5. Time-based logic is fragile
+
+I learned that date calculations must be handled carefully to avoid inconsistent results.

@@ -1,0 +1,77 @@
+Refactored Code
+JavaScript
+/**
+ * Constants for business rules and inventory management.
+ */
+const MINIMUM_REQUIRED_STOCK = 1; 
+
+/**
+ * Processes a customer's shopping cart against the available inventory.
+ * Verifies stock levels, updates inventory, and calculates the total order price.
+ * 
+ * @param {Array<Object>} shoppingCart - List of items the user wants to buy. Each item requires 'id' and 'p' (price).
+ * @param {Array<Object>} inventory - Current stock list. Each item requires 'id' and 'q' (quantity).
+ * @param {number} requestedQuantity - The quantity to purchase for each item in the cart.
+ * @returns {Object} An object containing the processed items and the total order cost.
+ */
+function processPurchaseOrder(shoppingCart, inventory, requestedQuantity) {
+  const successfullyProcessedItems = [];
+  let totalOrderCost = 0;
+
+  for (const cartItem of shoppingCart) {
+    const inventoryItem = findInventoryItem(inventory, cartItem.id);
+
+    if (!inventoryItem) {
+      console.log(`Item ${cartItem.id} not available in inventory`);
+      continue;
+    }
+
+    const hasSufficientStock = inventoryItem.q >= requestedQuantity;
+
+    if (hasSufficientStock) {
+      successfullyProcessedItems.push(cartItem);
+      totalOrderCost += cartItem.p * requestedQuantity;
+      
+      // Deduct purchased quantity from live inventory
+      inventoryItem.q -= requestedQuantity;
+    } else {
+      console.log(`Item ${cartItem.id} is out of stock for the requested quantity (${requestedQuantity}).`);
+    }
+  }
+
+  return {
+    processedItems: successfullyProcessedItems,
+    totalCost: totalOrderCost
+  };
+}
+
+/**
+ * Helper function to locate an item in the inventory by its ID.
+ * 
+ * @param {Array<Object>} inventory - The stock list to search through.
+ * @param {string|number} itemId - The unique identifier of the item.
+ * @returns {Object|null} The inventory item if found, otherwise null.
+ */
+function findInventoryItem(inventory, itemId) {
+  return inventory.find(item => item.id === itemId) || null;
+}
+Breakdown of Improvements
+1. Naming & Intent (Prompt 1)
+Cryptic to Descriptive: Changed the main function from p to processPurchaseOrder. Shifted single-letter variables like i to shoppingCart, a to inventory, r to successfullyProcessedItems, and t to totalOrderCost.
+
+Property Clarity: Left internal structural properties like .id as-is to preserve functionality, but clarified what .p (price) and .q (quantity) meant via documentation and arithmetic mapping.
+
+2. Documentation & Context (Prompt 2)
+JSDoc Header: Added formal JSDoc blocks to both functions outlining their exact purpose, parameter expectations, and return structures.
+
+Strategic Comments: Avoided obvious line-by-line commentary. Instead, added a comment highlighting the side-effect of the function: mutating the live inventory stock (inventoryItem.q -= requestedQuantity).
+
+3. Structure, Formatting, & Refactoring (Prompt 3 & Task)
+Breaking into Smaller Functions: Yes, extracting the inner loop into findInventoryItem() drastically improved readability. JavaScript's native .find() method replaces the messy nested for loop and the boolean flag (f), dropping the code's nesting depth significantly.
+
+Guard Clauses & Early Exits: Changed the structural logic to use continue. If an item isn't found, it logs and skips immediately, reducing the need for heavily indented if/else blocks.
+
+Complex Conditions: Extracted the stock-check evaluation into a clear boolean variable: hasSufficientStock.
+
+Modern JS Syntax: Upgraded generic for loops to for...of loops for cleaner iteration, and swapped var/let for const where variables are never reassigned.
+

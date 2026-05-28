@@ -1,0 +1,500 @@
+EXERCISE 1.1 
+
+Test Cases for calculateTaskScore
+1. Happy Path (Normal Task)
+
+Input:
+
+priority: MEDIUM
+status: TODO (not DONE or REVIEW)
+dueDate: 5 days in the future
+tags: []
+updatedAt: recent valid date
+
+Expected:
+
+Returns a valid positive score based mainly on MEDIUM priority (2 × 10 = 20)
+No due-date or tag or status penalties applied
+2. Overdue Task Bonus
+
+Input:
+
+priority: LOW
+dueDate: yesterday (past date)
+status: TODO
+
+Expected:
+
+Base score + 30 overdue bonus applied
+Score increases significantly due to overdue logic
+3. Completed Task Penalty
+
+Input:
+
+priority: HIGH
+status: DONE
+dueDate: future date
+
+Expected:
+
+Base score is calculated then 50 points subtracted
+Final score is significantly reduced (possibly negative)
+4. Task With Critical Tags
+
+Input:
+
+priority: MEDIUM
+tags: ["critical"] or ["blocker"]
+status: TODO
+
+Expected:
+
+Base score + 8 tag bonus applied
+Ensures tag-based boosting works correctly
+5. Empty or Missing Tags (Edge Case)
+
+Input:
+
+priority: HIGH
+tags: []
+
+Expected:
+
+No crash (no .some() error)
+No tag bonus applied
+
+
+EXERCISE 1.2
+
+1. 🔗 Test Dependencies
+
+Understanding dependencies is critical:
+
+Core dependency chain:
+calculateTaskScore
+        ↓
+sortTasksByImportance
+        ↓
+getTopPriorityTasks
+Dependency rules:
+If calculateTaskScore is wrong → ALL other functions fail logically
+If sortTasksByImportance is wrong → top tasks selection becomes incorrect
+If getTopPriorityTasks is wrong → UI displays wrong priorities but scoring may still be correct
+2. 🧪 Types of Tests Needed
+✔ Unit Tests
+
+Focus on individual logic:
+
+calculateTaskScore
+✔ Integration Tests
+
+Focus on function interaction:
+
+sortTasksByImportance + calculateTaskScore
+getTopPriorityTasks + sorting logic
+✔ Edge Case Tests
+
+Focus on failure safety:
+
+missing fields
+invalid data types
+empty arrays
+extreme combinations
+3. 📊 Priority of Test Cases
+🔴 HIGH PRIORITY (Must pass — core correctness)
+Test 1: Basic score calculation (calculateTaskScore)
+
+Input:
+
+MEDIUM priority
+no tags
+valid dates
+
+Expected Outcome:
+
+Base score = 20
+No bonuses or penalties applied
+Function returns a number
+Test 2: Overdue task scoring
+
+Input:
+
+task with past dueDate
+
+Expected Outcome:
+
++30 added to score
+Correct overdue detection
+Test 3: DONE status penalty
+
+Input:
+
+priority = HIGH
+status = DONE
+
+Expected Outcome:
+
+Score reduced by 50
+Final score may be negative or low
+Test 4: Sorting correctness (sortTasksByImportance)
+
+Input:
+
+array of tasks with different priorities/scores
+
+Expected Outcome:
+
+tasks sorted in DESCENDING score order
+highest score appears first
+original array NOT modified
+Test 5: Top tasks selection (getTopPriorityTasks)
+
+Input:
+
+10 tasks, limit = 5
+
+Expected Outcome:
+
+returns exactly 5 tasks
+tasks are already sorted by importance
+🟡 MEDIUM PRIORITY (Important behavior correctness)
+Test 6: Due today scoring
+
+Input:
+
+dueDate = today
+
+Expected Outcome:
+
++20 bonus applied
+Test 7: Tag-based bonus
+
+Input:
+
+tags = ["critical"]
+
+Expected Outcome:
+
++8 added to score
+Test 8: REVIEW status penalty
+
+Input:
+
+status = REVIEW
+
+Expected Outcome:
+
+-15 applied to score
+Test 9: Default limit behavior
+
+Input:
+
+getTopPriorityTasks(tasks) without limit
+
+Expected Outcome:
+
+returns top 5 tasks by default
+🟢 EDGE CASE TESTS (Stability & safety)
+Test 10: Missing tags array
+
+Input:
+
+task.tags = undefined
+
+Expected Outcome:
+
+no crash
+function should safely handle missing property (or fail gracefully depending on design)
+Test 11: Missing dueDate
+
+Input:
+
+task.dueDate = null
+
+Expected Outcome:
+
+due-date logic skipped safely
+no runtime error
+Test 12: Invalid priority value
+
+Input:
+
+priority = "UNKNOWN"
+
+Expected Outcome:
+
+base score = 0
+no crash
+Test 13: Empty task list (sorting)
+
+Input:
+
+[]
+
+Expected Outcome:
+
+returns []
+Test 14: Tie scores in sorting
+
+Input:
+
+multiple tasks with identical scores
+
+Expected Outcome:
+
+stable or consistent order (no random reshuffling)
+Test 15: Extreme combined case
+
+Input:
+
+URGENT + overdue + critical tag + DONE + recent update
+
+Expected Outcome:
+
+all rules applied together correctly:
++40 base (urgent)
++30 overdue
++8 tag
++5 update
+-50 DONE
+final score reflects full combination correctly
+
+
+EXERCISE 2.1
+
+test("calculateTaskScore returns correct base score for MEDIUM priority without modifiers", () => {
+  const task = {
+    priority: "MEDIUM",
+    status: "TODO",
+    tags: [],
+    updatedAt: new Date(),
+    dueDate: null
+  };
+
+  const result = calculateTaskScore(task);
+
+  expect(result).toBe(20); // base priority only, no bonuses or penalties applied
+});
+
+
+EXERCISE 2.2
+
+describe("calculateTaskScore - due date calculation", () => {
+
+  // Helper: fixed "now" concept (avoids flaky tests)
+  const BASE_TASK = {
+    priority: "MEDIUM",
+    status: "TODO",
+    tags: [],
+    updatedAt: new Date("2025-01-10T00:00:00Z")
+  };
+
+  test("adds +30 points for overdue tasks", () => {
+    const task = {
+      ...BASE_TASK,
+      dueDate: new Date("2025-01-08T00:00:00Z") // 2 days overdue
+    };
+
+    const result = calculateTaskScore(task);
+
+    // MEDIUM = 20 base + 30 overdue bonus
+    expect(result).toBe(50);
+  });
+
+  test("adds +20 points for tasks due today", () => {
+    const task = {
+      ...BASE_TASK,
+      dueDate: new Date("2025-01-10T00:00:00Z") // same day as updatedAt baseline
+    };
+
+    const result = calculateTaskScore(task);
+
+    // 20 base + 20 today bonus
+    expect(result).toBe(40);
+  });
+
+  test("adds +15 points for tasks due within 1-2 days", () => {
+    const task = {
+      ...BASE_TASK,
+      dueDate: new Date("2025-01-11T00:00:00Z") // 1 day ahead
+    };
+
+    const result = calculateTaskScore(task);
+
+    // 20 base + 15 near-term bonus
+    expect(result).toBe(35);
+  });
+
+  test("adds +10 points for tasks due within 3-7 days", () => {
+    const task = {
+      ...BASE_TASK,
+      dueDate: new Date("2025-01-15T00:00:00Z") // 5 days ahead
+    };
+
+    const result = calculateTaskScore(task);
+
+    // 20 base + 10 weekly bonus
+    expect(result).toBe(30);
+  });
+
+  test("does not apply due date bonus when dueDate is missing", () => {
+    const task = {
+      ...BASE_TASK
+      // no dueDate
+    };
+
+    const result = calculateTaskScore(task);
+
+    // Only base score applies
+    expect(result).toBe(20);
+  });
+
+  test("does not crash when dueDate is invalid", () => {
+    const task = {
+      ...BASE_TASK,
+      dueDate: "invalid-date"
+    };
+
+    const result = calculateTaskScore(task);
+
+    // Should still return a number (base behavior safe handling expected)
+    expect(typeof result).toBe("number");
+  });
+
+  test("correctly prioritizes overdue over all other ranges", () => {
+    const task = {
+      ...BASE_TASK,
+      dueDate: new Date("2025-01-01T00:00:00Z") // very overdue
+    };
+
+    const result = calculateTaskScore(task);
+
+    // 20 base + 30 overdue = strongest due-date boost
+    expect(result).toBe(50);
+  });
+
+});
+
+
+//EXERCISE 3.1
+
+/*function calculateTaskScore(task, currentUserId) {
+  const priorityWeights = {
+    LOW: 1,
+    MEDIUM: 2,
+    HIGH: 3,
+    URGENT: 4
+  };
+
+  let score = getBasePriorityScore(task, priorityWeights);
+
+  score += getAssignedUserBonus(task, currentUserId);
+
+  return score;
+}
+
+function getBasePriorityScore(task, weights) {
+  return (weights[task.priority] || 0) * 10;
+}
+
+function getAssignedUserBonus(task, currentUserId) {
+  return task.assignedTo === currentUserId ? 12 : 0;
+}*/
+
+
+
+EXERCISE 3.2
+
+FAILING TESTS
+test("applies +5 bonus for tasks updated within the last 24 hours", () => {
+  // FIXED reference time for consistency
+  const now = new Date("2025-01-10T12:00:00Z");
+
+  const task = {
+    priority: "MEDIUM",
+    status: "TODO",
+    tags: [],
+    dueDate: null,
+
+    // 23 hours ago → should qualify for bonus
+    updatedAt: new Date("2025-01-09T13:00:00Z")
+  };
+
+  const score = calculateTaskScore(task, now);
+
+  // MEDIUM = 20 base + 5 update bonus = 25
+  expect(score).toBe(25);
+});
+
+fIXED TESTS
+function calculateTaskScore(task, now = new Date()) {
+  const priorityWeights = {
+    LOW: 1,
+    MEDIUM: 2,
+    HIGH: 3,
+    URGENT: 4
+  };
+
+  let score = (priorityWeights[task.priority] || 0) * 10;
+
+  // ... other scoring logic here ...
+
+  // FIXED: safer time comparison (no fragile "days math")
+  const updatedAt = new Date(task.updatedAt);
+
+  const hoursSinceUpdate =
+    (now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60);
+
+  if (hoursSinceUpdate < 24) {
+    score += 5;
+  }
+
+  return score;
+}
+
+Before (buggy)
+daysSinceUpdate = milliseconds → days (lossy)
+After (fixed)
+hoursSinceUpdate = precise time comparison
+
+EXERCISE 4.1
+test("integration test: calculates scores, sorts tasks, and returns top priority tasks correctly", () => {
+  const tasks = [
+    {
+      id: 1,
+      priority: "LOW",
+      status: "TODO",
+      tags: [],
+      dueDate: null,
+      updatedAt: new Date("2025-01-01")
+    },
+    {
+      id: 2,
+      priority: "URGENT",
+      status: "TODO",
+      tags: ["critical"],
+      dueDate: new Date("2025-01-10"),
+      updatedAt: new Date("2025-01-09")
+    },
+    {
+      id: 3,
+      priority: "MEDIUM",
+      status: "DONE",
+      tags: [],
+      dueDate: new Date("2025-01-08"),
+      updatedAt: new Date("2025-01-07")
+    }
+  ];
+
+  // Run full pipeline
+  const result = getTopPriorityTasks(tasks, 2);
+
+  // 1. Should only return top 2 tasks
+  expect(result.length).toBe(2);
+
+  // 2. Highest priority task should be URGENT + critical tag
+  expect(result[0].id).toBe(2);
+
+  // 3. DONE task should be pushed down due to penalty
+  expect(result.some(task => task.id === 3)).toBe(false);
+});

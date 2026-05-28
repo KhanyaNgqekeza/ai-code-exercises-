@@ -1,0 +1,71 @@
+/**
+ * Test Suite for processPurchaseOrder
+ */
+function runTests() {
+  console.log("--- Starting Unit Tests ---");
+
+  // Mock Data Setup
+  const setupTestContext = () => ({
+    mockInventory: [
+      { id: "ITEM001", q: 10 }, // Item with stock
+      { id: "ITEM002", q: 2 },  // Item with low stock
+    ],
+    mockCart: [
+      { id: "ITEM001", p: 15 }, // Price: 15
+      { id: "ITEM002", p: 50 }, // Price: 50
+    ]
+  });
+
+  // Test Case 1: Successful Purchase of All Items
+  try {
+    const { mockCart, mockInventory } = setupTestContext();
+    const result = processPurchaseOrder(mockCart, mockInventory, 1);
+
+    // Assertions
+    if (result.processedItems.length !== 2) throw new Error("Expected 2 items to be processed.");
+    if (result.totalCost !== 65) throw new Error(`Expected total cost to be 65, got ${result.totalCost}`);
+    if (mockInventory[0].q !== 9) throw new Error("Inventory for ITEM001 did not decrement correctly.");
+    if (mockInventory[1].q !== 1) throw new Error("Inventory for ITEM002 did not decrement correctly.");
+    
+    console.log("✅ Test 1 Passed: Standard successful purchase logic works.");
+  } catch (error) {
+    console.error("❌ Test 1 Failed:", error.message);
+  }
+
+  // Test Case 2: Out of Stock (Requested quantity exceeds inventory)
+  try {
+    const { mockCart, mockInventory } = setupTestContext();
+    // Requesting 5 units, but ITEM002 only has 2 units available
+    const result = processPurchaseOrder(mockCart, mockInventory, 5);
+
+    // Assertions
+    if (result.processedItems.length !== 1) throw new Error("Expected only 1 item to pass stock check.");
+    if (result.totalCost !== 75) throw new Error(`Expected total cost to be 75 (15 * 5), got ${result.totalCost}`);
+    if (mockInventory[1].q !== 2) throw new Error("Failed item should not have had its inventory altered.");
+    
+    console.log("✅ Test 2 Passed: Out-of-stock constraints handled successfully.");
+  } catch (error) {
+    console.error("❌ Test 2 Failed:", error.message);
+  }
+
+  // Test Case 3: Handling Non-Existent Items gracefully
+  try {
+    const { mockInventory } = setupTestContext();
+    const brokenCart = [{ id: "GHOST_ITEM", p: 100 }];
+    
+    const result = processPurchaseOrder(brokenCart, mockInventory, 1);
+
+    // Assertions
+    if (result.processedItems.length !== 0) throw new Error("Expected 0 items to be processed.");
+    if (result.totalCost !== 0) throw new Error("Expected total cost to remain 0.");
+    
+    console.log("✅ Test 3 Passed: Missing item logic handles gracefully without breaking.");
+  } catch (error) {
+    console.error("❌ Test 3 Failed:", error.message);
+  }
+
+  console.log("--- Test Execution Complete ---");
+}
+
+// REMOVE THE COMMENT CHARACTERS BELOW TO RUN THE TESTS
+runTests();
