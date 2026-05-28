@@ -1,0 +1,161 @@
+the main components involved in task creation and updates:
+CLI Layer: this is the user interaction layer.
+- it receives commands from the terminal
+- calls the TaskManager
+CLI layer is involves in: 
+-create
+-status
+-priority
+-due
+
+BUSINESS LOGIC LAYER
+This is the core controller
+- implements task operations
+- Applies business rules
+- operates between model and storage
+Business Layer 
+- createTask()
+- updateTaskStatus()
+- updateTaskDueDate()
+- updateTaskPriority()
+
+DOMAIN MODEL
+ This defines the structure and the behaviour of the tasks
+ - represents the task object and encapsulates task behaviour
+ Domain Model uses the following methods
+ - markAsDone()
+ - update()
+ - isOverdue()
+
+ PERSISTENCE LAYER
+ This acts like a mini database layer using json files. It saves tasks to task.json. loads tasks from disk and provides CRUD operation
+ Persistence layer models
+ - addTask()
+ - getTask()
+ - updateTask
+
+ THE EXECUTION FLOW FOR TASK CREATION
+ cli.js
+    |
+Task Manager(app.js)
+    |
+Task (model.js)
+    |
+Task Storage(storage.js)
+    |
+tasks.json
+
+THE EXECUTION FLOW FOR TASK UPDATE
+cli.js
+    |
+TaskManager(app.js)
+    |
+Task (Task.Update())
+    |
+TaskStorage(storage.js)
+    |
+Tasks.json
+
+DATA STORAGE AND RETRIEVAL
+
+This is Data Storage
+Task is created and stored in a memory mat
+this.tasks[task.id] = task; //javescript 
+so the data us kept like
+"abc123": Task
+
+you then then need to convert the data into an array for storage
+const tasksArray = Object.values(this.tasks);
+this means it occur on json as 
+{task1},
+{task2}
+
+it is the written to disk
+fs.writeFileSync(this.storagePath, JSON.stringify(tasksArray, null, 2));
+
+For Data Retrieval
+when the app starts it is loaded
+this.load()
+
+It will then look if the file exists
+fs.existsSync(this.storagePath)
+
+it will read a file
+const rawData = fs.readFileSync(this.storagePath, 'utf8');
+
+After reading the file. it will parse it to json
+const tasksData = JSON.parse(rawData);
+
+It will then rebuild the Task object for each object and proceeds to restore fields manually
+task.id = taskData.id;
+task.priority = taskData.priority;
+task.status = taskData.status;
+task.createdAt = new Date(taskData.createdAt);
+task.updatedAt = new Date(taskData.updatedAt);
+
+it will then store everything in the memory map
+this.tasks[task.id] = task;
+
+
+I found the Repository Pattern interesting.
+instead of directly interacting with the file system everywhere. all data goes through one class
+
+my initial understanding priority is a label shown to users and helps sjow which tasks are important. in my understanding it gets passed through the system without much logic. 
+However, I discovered it is a core system attribute. It is a fundamental property of a task.  I discovered that priority us used in actual logic in filering tasks by priority and organising task list
+
+Priority is part of the tasks identity and not just a presentation. it is also a pass through value across the system.  The task priority is a system that influences filtering and organisation.
+
+                ┌──────────────────────┐
+                │      User CLI        │
+                │ node cli.js create   │
+                └─────────┬────────────┘
+                          │
+                          ▼
+        ┌──────────────────────────────────┐
+        │         cli.js (Commander)       │
+        │ - parses args                   │
+        │ - extracts title/options        │
+        └─────────┬────────────────────────┘
+                  │
+                  ▼
+        ┌──────────────────────────────────┐
+        │        TaskManager (app.js)      │
+        │ createTask()                    │
+        │ - validates date                │
+        │ - transforms input              │
+        │ - builds Task object            │
+        └─────────┬────────────────────────┘
+                  │
+                  ▼
+        ┌──────────────────────────────────┐
+        │        Task Model (models.js)    │
+        │ new Task()                      │
+        │ - id generation                 │
+        │ - timestamps                   │
+        │ - default status               │
+        └─────────┬────────────────────────┘
+                  │
+                  ▼
+        ┌──────────────────────────────────┐
+        │     TaskStorage (storagejs)     │
+        │ addTask()                      │
+        │ - in-memory map                │
+        │ - save() triggers write        │
+        └─────────┬────────────────────────┘
+                  │
+                  ▼
+        ┌──────────────────────────────────┐
+        │        File System               │
+        │        tasks.json                │
+        └──────────────────────────────────┘
+
+when a task is marked as complete, the system retrives the task from memory. It updates uts state using markAsDone() while setting status to DONE, adding a CompletedAt() timestamp and updating UpdatedAt() and then saves the updates in memory data to tasks.json by writing them to disk
+
+POTENTIAL POINTS OF FAILURE
+- Invalid task ID ir status from the CLI
+- calling markAsDone() on a corrupt task object
+- errors during state mutation(status, completedAt, UpdatedAt)
+- lack of centralised error handling
+- task not found in memory
+
+The application persists changes by calling TaskStorage.Save() after updates are made in memory. This methids converts all tasks in the in memory store into an array and puts them into JSon and overwrites the task.jsonfile using fs.Whilefilesync. The in memory state is rewritten each time a change appears
