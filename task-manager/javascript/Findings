@@ -1,0 +1,183 @@
+Based on my findings. The code base is organised as follws
+
+the project structure has a 
+cli.js
+app.js
+models.js
+storage.js
+tasks.js
+
+the Model.js file has the following entities
+Task
+TaskPriority
+TaskStatus
+
+Storage.js
+Loads tasks from tasks.json
+Creates, Reads, Updates and Deletes tasks from tasks.json with the classes
+addTak(), UpdateTask(), deleteTask(), getAllTasks(), getTaskById()
+
+app.js is handles 
+Validation of user input
+Task creation
+Task updating
+
+In this Project, the following technologies and frameworks were used:
+node.js - runs the project
+commander.js this is used in CLI.js(option handlind and CLI structure)
+
+
+npm packages_ used to generate uniue task Ids
+
+JSon: used as a database to store the tasks in a file called tasks.json
+
+Javascript is the programming language used to write the code base. The code is modularized and organized into different files based on their functionality. The project follows a clear separation of concerns, with each file handling specific tasks related to task management.
+
+task-manager/
+│
+├── cli.js
+├── app.js
+├── models.js
+├── storage.js
+├── tasks.json   
+│
+├── package.json
+└── node_modules/
+
+MISCONCEPTIONS
+- I assumed that the project is a nodejs project but it is a CLI application with layered architecture. The CLI.js file is responsible for handling the command-line interface and user interactions, while the app.js file contains the core logic for task management. The models.js file defines the data structures for tasks, priorities, and statuses, while storage.js handles the persistence of tasks in a JSON file.
+- JSON is not used but rather acts as a file based database substitute
+- the commnander.js is not a dependency. It is the entire command rounting system 
+
+Important Entry Points
+- cli.js: This is the entry point for the command-line interface. It defines the commands and options available to the user and handles user input.
+- app.js: This file contains the core logic for task management, including validation, task creation, and updating. It interacts with the storage.js file to perform CRUD operations on tasks.
+- storage.js: This file is responsible for loading tasks from the tasks.json file and performing CRUD operations on the tasks. It provides functions to add, update, delete, and retrieve tasks.
+- model.js: This is the Domain Entry POint. IT defines the codre entity used everywhere. it controls tasks behavioues markAsDone(),update(), isOverdue() etc. It also defines the TaskPriority and TaskStatus enums which are used to categorize tasks based on their priority and status.
+
+KEY COMPONENTS AND RESPONSIBILITIES
+- cli layer(cli.js): Defines all cli commands using Command.js and handles user interactions. It serves as the interface between the user and the application logic.. it creates, lists, status, priority, due show, delete. etc
+- app layer(app.js): Contains the core logic for task management, including validation, task creation, and updating. It interacts with the storage layer to perform CRUD operations on tasks. It also contains the business logic for handling tasks, such as marking tasks as done or checking if a task is overdue.
+- storage layer(storage.js): Responsible for loading tasks from the tasks.json file and performing CRUD operations on the tasks. It provides functions to add, update, delete, and retrieve tasks. It acts as a data access layer that abstracts away the details of how tasks are stored and retrieved.
+- model layer(models.js): Defines the data structures for tasks, priorities, and statuses. It includes the Task class, which represents a task entity with properties such as id, title, description, priority, status, and due date. It also defines the TaskPriority and TaskStatus enums, which are used to categorize tasks based on their priority and status. The model layer encapsulates the core entities and their behaviors, providing a clear representation of the domain concepts in the application.
+- tasks.json: This file serves as a simple data store for the tasks. It is used to persist the tasks created by the user and allows for retrieval and manipulation of tasks across different sessions of the application. The storage layer interacts with this file to perform CRUD operations on the tasks, ensuring that the data is saved and retrieved correctly.
+- uuid package: This npm package is used to generate unique task IDs. It ensures that each task created has a unique identifier, which is essential for managing tasks effectively and avoiding conflicts when performing CRUD operations on tasks. The uuid package provides a simple and reliable way to generate unique IDs for tasks in the application.
+
+
+Where export functionality might belong: 
+- Application Layer (app.js): The export functionality could be implemented in the app.js file, as it contains the core logic for task management. This layer is responsible for handling the business logic of the application, and exporting tasks could be considered part of that logic. The export functionality could allow users to export their tasks in a specific format (e.g., CSV, JSON) for backup or sharing purposes. It would interact with the storage layer to retrieve the tasks and then format them accordingly before exporting.
+- CLI Layer (cli.js): Alternatively, the export functionality could also be implemented in the cli.js file, as it is responsible for handling user interactions and commands. This layer could provide a command for exporting tasks, which would then call the appropriate functions in the app.js file to perform the export operation. This approach would keep the CLI commands organized and allow users to easily access the export functionality through the command-line interface.
+
+Which existing component might need modification to accommodate the new export functionality:
+- cli.js: If the export functionality is implemented in the CLI layer, the cli.js file would need modification to include a new command for exporting tasks. This would involve defining a new command using commander.js and implementing the logic to handle the export command, which would likely involve calling a function in the app.js file to perform the export operation. The cli.js file would need to be updated to include this new command and ensure that it is properly integrated with the existing command structure.
+- app.js: The app.js file would likely need modification to accommodate the new export functionality. This is because the export functionality would require additional logic to retrieve tasks from the storage layer, format them for export, and handle any necessary file operations for exporting the tasks. The app.js file would need to be updated to include a new function or method that handles the export process, which would involve interacting with the storage layer to get the tasks and then formatting them appropriately before exporting. Additionally, any necessary error handling or validation related to the export process would also need to be implemented in the app.js file.
+
+To implement the export functionality, I would first decide on the format for exporting tasks (e.g., CSV, JSON). Then, I would create a new function in the app.js file that retrieves all tasks from the storage layer, formats them according to the chosen export format, and handles any necessary file operations to save the exported data. Next, I would update the cli.js file to include a new command for exporting tasks, which would call the newly created function in app.js when executed. Finally, I would test the export functionality to ensure that it works correctly and that tasks are exported in the desired format without any issues.
+program
+  .command('export')
+  .description('Export tasks to CSV')
+  .option('-f, --file <path>', 'Output file', 'tasks.csv')
+  .option('-s, --status <status>', 'Filter by status')
+  .option('-p, --priority <priority>', 'Filter by priority')
+  .action((options) => {
+    const csv = taskManager.exportTasksToCSV(options);
+
+    const fs = require('fs');
+    fs.writeFileSync(options.file, csv);
+
+    console.log(`Exported tasks to ${options.file}`);
+  });
+
+  - the CLI would be directly affected because this is where the user would interact with the export functionality. The app.js file would also be affected as it would need to include the logic for exporting tasks, such as retrieving tasks from storage, formatting them for export, and handling any necessary file operations. The storage.js file might also need to be modified if there are any specific requirements for how tasks are retrieved or stored in relation to the export functionality. Overall, the implementation of the export functionality would require modifications to multiple components of the application to ensure that it is properly integrated and functions as intended.
+   - the app.js task manager would also be affected as it would need to include the logic for exporting tasks, such as retrieving tasks from storage, formatting them for export, and handling any necessary file operations. The storage.js file might also need to be modified if there are any specific requirements for how tasks are retrieved or stored in relation to the export functionality. Overall, the implementation of the export functionality would require modifications to multiple components of the application to ensure that it is properly integrated and functions as intended.
+
+
+   to plan out how I'd approach implememting the export feature:
+ 
+   1. understand  the existing codebase and identify where the export functionality would fit best (e.g., CLI layer or application layer).
+   2. define feature design
+   3. implement the export functionality in the chosen layer (e.g., add a new command in cli.js or create a new function in app.js).
+   4. create csv utility
+   5. add cli command for export
+   6. resuse storage layer to get tasks
+   7. validate the export functionality by testing it with different scenarios (e.g., exporting all tasks, filtering by status or priority).
+   8. flow testing to ensure that the export functionality works seamlessly with the existing features and does not introduce any bugs or issues.
+   9. final delivery and documentation of the new export feature, including any necessary updates to the README file or user guides to explain how to use the export functionality effectively.
+
+   Entity RElationship diagram on how the core entity classes connect
+                    ┌─────────────────────┐
+                 │   TaskManager       │
+                 │ (Service Layer)     │
+                 └─────────┬───────────┘
+                           │
+                           │ uses
+                           ▼
+                 ┌─────────────────────┐
+                 │   TaskStorage       │
+                 │ (Repository Layer)  │
+                 └─────────┬───────────┘
+                           │
+                           │ stores / retrieves
+                           ▼
+                 ┌─────────────────────┐
+                 │       Task          │
+                 │ (Domain Entity)     │
+                 └─────────┬───────────┘
+                           │
+        ┌──────────────────┼──────────────────┐
+        │                  │                  │
+        ▼                  ▼                  ▼
+┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+│ TaskStatus   │   │ TaskPriority │   │ Task fields  │
+│ (enum)       │   │ (enum)       │   │ + behavior   │
+└──────────────┘   └──────────────┘   └──────────────┘
+TaskStatus: current lifecycle state of a task (e.g., pending, in-progress, completed)
+TaskPriority: importance level of a task (e.g., low, medium, high)
+Task fields + behavior: properties of a task (e.g., id, title, description,
+due date) and methods for task behavior (e.g., markAsDone(), isOverdue())
+
+GLOSSARY
+- CLI (Command Line Interface): A way for users to interact with a program by typing commands in a terminal or command prompt.
+- CRUD (Create, Read, Update, Delete): The four basic operations for managing data in a database or data store.
+- JSON (JavaScript Object Notation): A lightweight data-interchange format that is easy for humans to read and write and easy for machines to parse and generate.
+- npm (Node Package Manager): A package manager for JavaScript that allows developers to install and        manage dependencies for their projects. 
+- UUID (Universally Unique Identifier): A standardized 128-bit identifier that is used to uniquely identify objects or entities in a system. It is often used to generate unique IDs for tasks or other entities in applications.
+- Enums (Enumerations): A data type that consists of a set of named values. Enums are used to represent a fixed set of constants, such as task priorities or statuses, in a more readable and maintainable way.
+- Layered Architecture: A software design pattern that organizes code into separate layers, each with specific                          
+responsibilities. Common layers include the presentation layer (CLI), application layer (business logic), and data access layer (storage).  
+- Separation of Concerns: A design principle that promotes the separation of different aspects of a program into distinct sections, allowing for better organization, maintainability, and scalability of the codebase.     
+Task: a unit of work or activity that needs to be completed, often represented as an object with properties such as title, description, priority, status, and due date. Tasks can be created, updated, and managed within a task management application.
+task status: the current lifecycle state of a task, which can be represented as an enum with values such as pending, in-progress, and completed. Task status helps to track the progress of a task and determine its current state in the workflow.     
+Task priority: the importance level of a task, which can be represented as an enum with values such as low, medium, and high. Task priority helps to prioritize tasks and determine their urgency or importance in the context of task management.
+overdue task: a task that has passed its due date without being marked as completed. An overdue task indicates that the task is late and may require immediate attention or action to ensure it is completed in a timely manner.
+task completion: the process of marking a task as done or completed, indicating that the task has been successfully finished. Task completion is often represented as a method or function in the task entity, allowing users to update the status of a task to reflect its completion. 
+task manager: a software application or system that helps users organize, manage, and track their tasks. A task manager typically provides features such as creating tasks, setting priorities and due dates, updating task status, and exporting tasks for backup or sharing purposes. It serves as a tool to help users stay organized and productive by keeping track of their tasks and deadlines.
+task storage: a component or layer in a task management application that is responsible for storing and retrieving tasks. It typically interacts with a data store, such as a JSON file or a database, to persist tasks and provide functions for adding, updating, deleting, and retrieving tasks. The task storage layer abstracts away the details of how tasks are stored and allows other components of the application to interact with tasks without needing to know the underlying storage mechanism.
+tags: keywords or labels that can be associated with tasks to provide additional context or categorization. Tags can be used to group tasks based on specific criteria, such as project, priority, or type of work. They can help users quickly identify and filter tasks based on their tags, making it easier to manage and organize tasks within a task management application.
+task listing: the process of displaying a list of tasks to the user, often with options to filter or sort the tasks based on criteria such as status, priority, or due date. Task listing is a common feature in task management applications that allows users to view and manage their tasks in an organized manner.
+
+
+PLANNING
+- files that are overdue should be abondoned unless they are priority.
+
+I started thinking sabout the flow rather than keyword matching. The prompts didn’t just ask “where to code” 
+they trained a mental model of the architecture so the correct location became logically obvious instead of guessed. to deepen my understanding I would 
+draw out the architecture and ask AI more prompts.
+
+The prompt that was most helpful for me was the domain + system-level reasoning together. 
+It forced me to think about the core entities and how they interact with each other, 
+which is crucial for understanding where to implement new features and how to modify existing components. 
+By thinking about the relationships between the Task, TaskStatus, and TaskPriority entities, 
+I was able to better understand the overall structure of the application and how different layers interact 
+with each other. This holistic approach helped me to identify the most appropriate locations for implementing new 
+functionality and making modifications, rather than just relying on keyword matching or surface-level understanding of
+ the codebase.
+
+ with a new codecase I would start by understanding the requirements and the desired functionality of the new feature. 
+ I would then analyze the existing codebase to identify where the new feature would fit best, 
+ considering the responsibilities of each layer and component. 
+ I would also think about how the new feature would interact with existing components and what 
+ modifications might be necessary to accommodate it. id would ask myself:
+ - What is the main object in the system?
+ - What is the user trying to achieve?
+ What are the core workflows
