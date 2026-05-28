@@ -1,0 +1,132 @@
+//REFACTORED CODE
+
+class StandardShippingStrategy {
+  calculate({ weight, length, width, height }, destinationCountry) {
+    const rates = { USA: 2.5, Canada: 3.5, Mexico: 4.0 };
+    const baseRate = rates[destinationCountry] ?? 4.5; 
+    
+    const baseCost = weight * baseRate;
+    const volume = length * width * height;
+    
+    const hasDimensionalSurcharge = weight < 2 && volume > 1000;
+    const surcharge = hasDimensionalSurcharge ? 5.0 : 0.0;
+
+    return baseCost + surcharge;
+  }
+}
+
+/**Architectural Agility over Monolithic Convenience
+The most profound learning is the power of separating what needs to be done from how it is executed.
+
+In the original code, the shipping calculator was a monolith that held all the business rules for every shipping type simultaneously.
+
+By shifting to the Strategy Pattern, the calculator became an abstract orchestrator, delegating behavior to dedicated strategy objects.
+
+This taught me that writing highly maintainable code means creating architectures where adding a feature requires writing new code (extending the system) rather than risking breakage by modifying old code.
+
+2. Signatures as Explicit System Contracts
+Moving object destructuring directly into the function parameter list completely changes how a function communicates with the rest of the codebase:
+
+JavaScript
+calculate({ weight, length, width, height }, destinationCountry) { ... }
+Instead of accepting an ambiguous packageDetails object and forcing a developer to scan the function body to see what properties are used, the signature acts as an immediate, self-documenting contract. It forces clarity at the boundary line, telling anyone invoking the function exactly what data shape is required to succeed.
+
+3. Immutability as a Defense Against Regression
+Initializing a variable like let cost = 0 and constantly mutating it through multiple blocks of arithmetic operations introduces cognitive load and points of failure. If an unexpected condition triggers, or if a developer adds a line of code in the middle of the function later on, the state of cost can easily become corrupted.
+
+By treating data as immutable—calculating intermediate values as const expressions and assembling them only at the final return statement—the code becomes deterministic. You can read the code from top to bottom with complete confidence that nothing is changing behind your back, making debugging significantly easier.
+
+*/
+
+
+
+//EXERCISE 2
+//CODE UNDER REVIEW
+
+// Fetch user profile and cache it in localStorage
+function handledata(uid, force) {
+  let cached = localStorage.getItem('user_' + uid);
+  if (cached && !force) {
+    var parsed = JSON.parse(cached);
+    return Promise.resolve(parsed);
+  }
+
+  return fetch('https://api.example.com/users/' + uid)
+    .then(function(res) {
+      if (res.status == 200) {
+        return res.json();
+      } else {
+        alert("Error loading user!");
+      }
+    })
+    .then(function(data) {
+      localStorage.setItem('user_' + uid, JSON.stringify(data));
+      return data;
+    })
+    .catch(function(err) {
+      console.log(err);
+    });
+}
+
+//REFACTORED CODE
+Refactored Code with Specific Improvements
+JavaScript
+/**
+ * Fetches user profile data with an integrated local storage cache layer.
+ * 
+ * @param {string|number} userId - The unique identifier for the user.
+ * @param {boolean} [forceRefresh=false] - If true, bypasses the local cache.
+ * @returns {Promise<Object>} The parsed user profile data.
+ */
+async function fetchUserProfile(userId, forceRefresh = false) {
+  const cacheKey = `user_${userId}`;
+  
+  if (!forceRefresh) {
+    const cachedData = localStorage.getItem(cacheKey);
+    if (cachedData) {
+      return JSON.parse(cachedData);
+    }
+  }
+
+  try {
+    const response = await fetch(`https://api.example.com/users/${userId}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const userData = await response.json();
+    localStorage.setItem(cacheKey, JSON.stringify(userData));
+    return userData;
+    
+  } catch (error) {
+    // Log internally but re-throw so the caller knows the operation failed
+    console.error(`Failed to fetch profile for user ${userId}:`, error);
+    throw error; 
+  }
+}
+
+/**
+ * The Danger of "Swallowing" Promises
+Logging an error via console.log(err) inside a catch block without re-throwing it is a critical anti-pattern. To JavaScript, a caught error that does not explicitly throw is considered "handled," which implicitly resolves the parent Promise with a value of undefined. This forces your calling UI components to crash downstream when they try to read property fields that don't exist, rather than allowing them to gracefully catch the failure and render an error state.
+
+II. Designing Boundaries via Decoupling
+A data-fetching utility should have single-minded focus: transport, translate, and cache data. Introducing environmental side effects like a browser-native alert() breaks portability. If that same utility needs to be run in a backend test suite, a server-side rendering (SSR) environment, or a native worker context, the execution environment will instantly throw a fatal error. Keep your transport functions pure; let the UI component catching the output decide how to present the error state to the end user.
+
+III. Linear Code is Maintainable Code
+Asynchronous callback structures (.then().catch()) inherently force your eyes to trace a zigzag path across the screen, adding massive cognitive load. Transitioning to an async/await pattern wrapped in a native try/catch block allows developers to read complex network orchestration code linearly—exactly like traditional synchronous code. When code is written to be read from top to bottom, spotting logical fallacies becomes significantly easier.
+
+
+
+
+
+EXERCISE 3
+Runtime Execution vs. Class Import Time
+Most Python code runs when an object is instantiated or a function is invoked. Metaclasses run at import time (the exact moment Python parses the file). This allows for a completely different class of defensive programming, catching syntax deviations, security holes, or architectural violations before a single unit test or server route even runs.
+
+II. Deep Introspection of Class Dictionaries
+During class construction, the class_dict parameter is a raw dictionary containing all functions, attributes, and variables defined inside the class block. Gaining exposure to this dictionary opened my eyes to how easily Python code can be inspected, rewritten, or rejected programmatically behind the scenes.
+
+III. The Principle of "Maximum Magical Restraint"
+While metaclasses are incredibly powerful, they introduce a high level of implicit behavior. The biggest structural takeaway is that because metaclasses obscure the linear path of code execution, they should be used strictly as a tool of last resort for foundational framework infrastructure, rather than standard application business logic.
+ */
