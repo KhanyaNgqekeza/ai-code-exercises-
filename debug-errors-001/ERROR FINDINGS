@@ -1,0 +1,91 @@
+# 🚨 Error Analysis Report
+
+## **Error Type:**
+Runtime TypeError — Attempting to access properties of `undefined`
+
+---
+
+## **Error Description:**
+
+The application crashed while rendering the user list in the dashboard.
+
+The `renderUserList(users)` function assumes that the `users` array always contains at least 5 elements. However, the API response only returned 3 users.
+
+As a result, when the loop continued beyond the available array length, the code attempted to access properties (`name`, `email`) of an `undefined` value, causing a runtime error.
+
+In simple terms:
+> The code tried to display users that did not exist.
+
+---
+
+## **Root Cause:**
+
+The issue is caused by a mismatch between the expected data structure and the actual API response.
+
+Key contributing factors:
+
+- Hardcoded loop limit:
+  ```javascript
+  for (let i = 0; i < 5; i++)
+
+  # 🚨 Error Report: User List Rendering Failure
+
+---
+
+## **Error Description and What It Means**
+
+The application encountered a runtime error while rendering a list of users on the dashboard.
+
+The function `renderUserList(users)` attempted to display user information (name and email) from an array. However, the function assumed that the array always contained at least 5 users.
+
+In reality, the API returned only 3 users. When the code tried to access users beyond index 2, it received `undefined`. Attempting to access properties like `name` or `email` on `undefined` caused a runtime crash.
+
+In simple terms:
+> The program tried to display users that did not exist in the returned data.
+
+---
+
+## **Root Cause Identification**
+
+The issue was caused by a mismatch between expected and actual data length.
+
+Key contributing factors:
+- The loop was hardcoded to iterate exactly 5 times:
+  - `for (let i = 0; i < 5; i++)`
+- The function did not use `users.length` to dynamically adjust iteration
+- No validation was performed to check if `users[i]` exists before accessing its properties
+- Assumption that API responses always contain a fixed number of users
+
+The core issue is **unsafe handling of dynamic API data**.
+
+---
+
+## **Suggested Solution**
+
+The problem should be resolved by ensuring the code adapts to the actual size of the data received.
+
+Recommended approach:
+- Iterate based on the actual array length instead of a fixed number
+- Ensure each `user` object exists before accessing its properties
+- Use safer iteration methods such as array-based loops (`forEach` or `map`)
+- Add defensive checks to prevent accessing undefined values
+
+This ensures the UI does not crash even when fewer users are returned from the API.
+
+---
+
+## **Learning Points**
+
+- API responses are dynamic and should never be assumed to have a fixed size
+- Hardcoding loop limits can lead to runtime errors and unstable UI behavior
+- Accessing properties of `undefined` results in JavaScript runtime crashes
+- Defensive programming is essential when dealing with external data sources
+- Always validate data before rendering it in the UI
+- Prefer iteration methods that automatically handle array length (e.g., `forEach`)
+- Frontend code should be resilient to incomplete or unexpected API responses
+
+---
+
+## **Summary Insight**
+
+The error highlights a common frontend integration issue: assuming consistent backend data structure. Robust applications must always handle variability in API responses gracefully.

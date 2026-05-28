@@ -1,0 +1,95 @@
+Error Analysis: Index Out of Bounds / Undefined Access
+
+Error Description:
+This error means the code is trying to access a property (name, email) on a value that does not exist. In this case, users[i] becomes undefined, so reading user.name causes the crash.
+
+Root Cause:
+The loop is hardcoded to run 5 times (i < 5), but the API only returns 3 users. When i exceeds the array length, users[i] becomes undefined, causing the error when properties are accessed.
+
+Solution:
+
+function renderUserList(users) {
+  const userListElement = document.getElementById('user-list');
+  userListElement.innerHTML = '';
+
+  for (let i = 0; i < users.length; i++) {
+    const user = users[i];
+
+    const userName = user.name;
+    const userEmail = user.email;
+
+    const userElement = document.createElement('div');
+    userElement.innerHTML = `
+      <div class="user-card">
+        <h3>${userName}</h3>
+        <p>${userEmail}</p>
+      </div>
+    `;
+
+    userListElement.appendChild(userElement);
+  }
+}
+
+Learning Points:
+
+Never hardcode array limits
+Always use array.length
+Undefined array values cause runtime crashes
+Always assume API data may be smaller than expected
+
+
+Error Analysis: TypeError (map is not a function)
+
+Error Description:
+This error means .map() is being called on something that is not an array. The variable tasks has been overwritten and is no longer an array.
+
+Root Cause:
+Inside addTask, a new variable named tasks is declared, which shadows the global tasks array. This causes tasks to become an object instead of an array.
+
+Solution:
+
+let tasks = [];
+
+function initApp() {
+  tasks = [
+    { id: 1, name: "Complete project proposal", completed: false },
+    { id: 2, name: "Meeting with team", completed: true }
+  ];
+  displayTasks();
+}
+
+function addTask(taskName) {
+  const newTask = {
+    id: Date.now(),
+    name: taskName,
+    completed: false
+  };
+
+  tasks.push(newTask);
+  displayTasks();
+}
+
+function displayTasks() {
+  const taskListElement = document.getElementById('task-list');
+  taskListElement.innerHTML = "";
+
+  tasks.map(task => {
+    const taskElement = document.createElement('div');
+    taskElement.innerHTML = `
+      <div class="task-item ${task.completed ? 'completed' : ''}">
+        <span>${task.name}</span>
+        <button onclick="toggleTaskStatus(${task.id})">Toggle</button>
+        <button onclick="deleteTask(${task.id})">Delete</button>
+      </div>
+    `;
+    taskListElement.appendChild(taskElement);
+  });
+}
+
+Learning Points:
+
+Variable shadowing breaks global state
+Arrays must not be overwritten with objects
+.map() only works on arrays
+Always keep variable types consistent
+Use clear naming to avoid collisions
