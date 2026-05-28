@@ -1,0 +1,245 @@
+THIS IS THE ORIGINAL CODE I HAVE USED
+function calculateTaskScore(task) {
+  const priorityWeights = {
+    LOW: 1,
+    MEDIUM: 2,
+    HIGH: 3,
+    URGENT: 4
+  };
+
+  let score = (priorityWeights[task.priority] || 0) * 10;
+
+  if (task.dueDate) {
+    const now = new Date();
+    const dueDate = new Date(task.dueDate);
+    const daysUntilDue = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+
+    if (daysUntilDue < 0) {
+      score += 30;
+    } else if (daysUntilDue === 0) {
+      score += 20;
+    } else if (daysUntilDue <= 2) {
+      score += 15;
+    } else if (daysUntilDue <= 7) {
+      score += 10;
+    }
+  }
+
+  if (task.status === "done") {
+    score -= 50;
+  } else if (task.status === "review") {
+    score -= 15;
+  }
+
+  if (task.tags.some(tag =>
+    ["blocker", "critical", "urgent"].includes(tag)
+  )) {
+    score += 8;
+  }
+
+  const updatedAt = new Date(task.updatedAt);
+  const now = new Date();
+  const daysSinceUpdate = Math.floor((now - updatedAt) / (1000 * 60 * 60 * 24));
+
+  if (daysSinceUpdate < 1) {
+    score += 5;
+  }
+
+  return score;
+}
+
+THIS IS THE AI DOCUMENTATION ON PROMPT 1 USING JSDoc
+/**
+ * Calculates a dynamic importance score for a task based on multiple factors
+ * including priority, due date urgency, status penalties, tags, and recency.
+ *
+ * This score is used to rank tasks so that more important and time-sensitive
+ * tasks appear higher in sorted lists.
+ *
+ * @function calculateTaskScore
+ * @param {Object} task - The task object to evaluate
+ * @param {string} task.priority - Priority level of the task (LOW, MEDIUM, HIGH, URGENT)
+ * @param {string|number|Date} task.dueDate - The due date of the task (optional)
+ * @param {string} task.status - Current status of the task (e.g., "todo", "review", "done")
+ * @param {Array<string>} task.tags - Array of tags associated with the task
+ * @param {string|Date} task.updatedAt - Timestamp of the last update to the task
+ *
+ * @returns {number} A numeric score representing the task's importance.
+ * Higher values indicate higher priority in sorting.
+ *
+ * @throws {Error} May throw errors indirectly if invalid date values are passed
+ * to Date constructor (e.g., invalid date strings causing NaN comparisons).
+ *
+ * @example
+ * const task = {
+ *   priority: "HIGH",
+ *   dueDate: "2026-05-20",
+ *   status: "todo",
+ *   tags: ["critical"],
+ *   updatedAt: "2026-05-18"
+ * };
+ *
+ * const score = calculateTaskScore(task);
+ * console.log(score);
+ *
+ * @description
+ * Scoring breakdown:
+ * - Base score: priority weight × 10
+ * - Due date adjustments:
+ *   - Overdue: +30
+ *   - Due today: +20
+ *   - Due in 1–2 days: +15
+ *   - Due in 3–7 days: +10
+ * - Status penalties:
+ *   - done: -50
+ *   - review: -15
+ * - Tag boost:
+ *   - +8 if tags include "blocker", "critical", or "urgent"
+ * - Recency boost:
+ *   - +5 if updated within the last 24 hours
+ *
+ * @important
+ * - This function does NOT mutate the task object.
+ * - Score is recalculated dynamically each time it is called.
+ * - Time-based calculations depend on the system clock.
+ * - Invalid or missing fields may result in incorrect scoring.
+ */
+
+ Insights or improvements I identified using Prompt 2
+ Potential improvements (without changing behavior)
+Use optional chaining for safety:
+task.tags?.some(...)
+Store new Date() once instead of calling it multiple times
+Extract “magic numbers” into constants for readability
+Create helper functions for:
+due date scoring
+priority scoring
+status penalties
+Add validation for missing or malformed task fields
+Improve testability by isolating scoring rules into smaller functions
+
+COMBINED DOCUMENTATION
+/**
+ * Calculates a dynamic importance score for a task based on multiple factors
+ * including priority, due date urgency, status penalties, tags, and recency.
+ *
+ * This function is part of a rule-based task prioritization system. It converts
+ * raw task properties into a single numeric score that is used to sort tasks
+ * by importance (highest score = highest priority).
+ *
+ * The scoring system is dynamic, meaning a task’s score may change over time
+ * without any direct modification, based on time-sensitive conditions such as
+ * due dates and last update time.
+ *
+ * @function calculateTaskScore
+ *
+ * @param {Object} task - The task object used for scoring
+ * @param {('LOW'|'MEDIUM'|'HIGH'|'URGENT')} task.priority - Priority level of the task
+ * @param {string|Date|number} [task.dueDate] - Optional due date of the task
+ * @param {string} task.status - Current task status (e.g., "todo", "review", "done")
+ * @param {string[]} task.tags - Array of tags associated with the task
+ * @param {string|Date|number} task.updatedAt - Timestamp of last task update
+ *
+ * @returns {number} score - A computed importance score where higher values indicate higher priority
+ *
+ * @throws {Error}
+ * This function does not explicitly throw errors, but may produce incorrect results if:
+ * - Invalid date values are provided to Date parsing
+ * - Required fields (like tags or updatedAt) are missing or malformed
+ *
+ * @example
+ * const task = {
+ *   priority: "HIGH",
+ *   dueDate: "2026-05-20",
+ *   status: "todo",
+ *   tags: ["critical"],
+ *   updatedAt: "2026-05-18"
+ * };
+ *
+ * const score = calculateTaskScore(task);
+ * console.log(score);
+ *
+ * @description
+ * Scoring logic breakdown:
+ *
+ * 1. Base Priority Score:
+ *    - LOW = 10
+ *    - MEDIUM = 20
+ *    - HIGH = 30
+ *    - URGENT = 40
+ *
+ * 2. Due Date Urgency Adjustments:
+ *    - Overdue: +30
+ *    - Due today: +20
+ *    - Due in 1–2 days: +15
+ *    - Due in 3–7 days: +10
+ *
+ * 3. Status Penalties:
+ *    - done: -50
+ *    - review: -15
+ *
+ * 4. Tag Boost:
+ *    - +8 if tags include "blocker", "critical", or "urgent"
+ *
+ * 5. Recency Boost:
+ *    - +5 if updated within the last 24 hours
+ *
+ * @important
+ * - Score is NOT stored; it is recalculated each time the function runs.
+ * - This function does NOT mutate the input task object.
+ * - Ranking is time-sensitive and may change automatically over time.
+ * - The system is rule-based (not AI/ML-based).
+ * - Missing or invalid fields may affect scoring accuracy.
+ *
+ * @note
+ * This function is intended for use in task sorting algorithms such as:
+ * Array.sort((a, b) => calculateTaskScore(b) - calculateTaskScore(a))
+ */
+function calculateTaskScore(task) {
+  const priorityWeights = {
+    LOW: 1,
+    MEDIUM: 2,
+    HIGH: 3,
+    URGENT: 4
+  };
+
+  let score = (priorityWeights[task.priority] || 0) * 10;
+
+  if (task.dueDate) {
+    const now = new Date();
+    const dueDate = new Date(task.dueDate);
+    const daysUntilDue = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+
+    if (daysUntilDue < 0) {
+      score += 30;
+    } else if (daysUntilDue === 0) {
+      score += 20;
+    } else if (daysUntilDue <= 2) {
+      score += 15;
+    } else if (daysUntilDue <= 7) {
+      score += 10;
+    }
+  }
+
+  if (task.status === "done") {
+    score -= 50;
+  } else if (task.status === "review") {
+    score -= 15;
+  }
+
+  if (task.tags?.some(tag =>
+    ["blocker", "critical", "urgent"].includes(tag)
+  )) {
+    score += 8;
+  }
+
+  const updatedAt = new Date(task.updatedAt);
+  const now = new Date();
+  const daysSinceUpdate = Math.floor((now - updatedAt) / (1000 * 60 * 60 * 24));
+
+  if (daysSinceUpdate < 1) {
+    score += 5;
+  }
+
+  return score;
+}

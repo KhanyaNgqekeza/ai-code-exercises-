@@ -1,0 +1,329 @@
+API Endpoint Documentation
+(PROMPT 1)
+Description
+
+This API provides product retrieval functionality with support for filtering, sorting, pagination, and single product lookup. The /products endpoint returns a list of products from the database with optional filters such as category, price range, and stock availability, while also supporting sorting and pagination controls. The /products/{productId} endpoint retrieves a single product by its unique database identifier. The system is built on top of a MongoDB-style model (ProductModel) and uses dynamic query construction to allow flexible client-driven filtering and ordering of results.
+
+Request Parameters
+
+For GET /products, the API accepts query parameters including category (string) to filter products by category, minPrice and maxPrice (numbers) to define a price range, sort (string, default createdAt) to specify the field used for sorting, order (string, either asc or desc, default desc) to define sort direction, page (number, default 1) for pagination, limit (number, default 20) to control how many results are returned per page, and inStock (string boolean "true") to filter only products with available stock greater than zero. For GET /products/{productId}, a single path parameter productId (string) is required and must be a valid database ObjectId.
+No request body is used for either endpoint.
+
+Response Format
+
+On success, GET /products returns HTTP 200 with a JSON object containing an array of products and a pagination object. The pagination object includes total (total number of matching products), page (current page number), limit (items per page), and pages (total number of pages). Each product includes fields such as id, name, price, category, and stockQuantity. The GET /products/{productId} endpoint returns HTTP 200 with a single product object.
+
+Authentication
+
+This API does not currently implement authentication or authorization. All endpoints are publicly accessible. In a production environment, authentication such as JWT tokens or API keys would typically be required to restrict access and enforce rate limits.
+
+Error Handling
+
+The API returns structured error responses. A 400 Bad Request is returned when the product ID format is invalid (for example, malformed MongoDB ObjectId). A 404 Not Found is returned when a product does not exist in the database. A 500 Internal Server Error is returned for unexpected server failures such as database errors or query execution issues. All error responses include an error field and a message field describing the failure.
+Example Requests and Responses
+
+A filtered product list request may look like:
+
+GET /products?category=electronics&minPrice=10&maxPrice=100&inStock=true&page=1&limit=10
+
+and may return:
+
+{
+  "products": [
+    {
+      "id": "64f1c2a9b1d2c3e4f5a6b7c8",
+      "name": "Wireless Mouse",
+      "price": 25.99,
+      "category": "electronics",
+      "stockQuantity": 10
+    }
+  ],
+  "pagination": {
+    "total": 42,
+    "page": 1,
+    "limit": 10,
+    "pages": 5
+  }
+}
+
+A single product request may look like:
+
+GET /products/64f1c2a9b1d2c3e4f5a6b7c8
+
+and may return:
+
+{
+  "id": "64f1c2a9b1d2c3e4f5a6b7c8",
+  "name": "Wireless Mouse",
+  "price": 25.99,
+  "category": "electronics",
+  "stockQuantity": 10
+}
+Rate Limiting and Special Considerations
+
+There is currently no rate limiting implemented, meaning requests are unrestricted. The API uses MongoDB-style querying with dynamic filter construction, which provides flexibility but may become inefficient at scale due to skip-based pagination. Sorting is fully dynamic based on query input, which requires careful validation in production systems. Price filters use floating-point parsing, and stock filtering relies on numeric comparisons. The system does not include caching, authentication, or request throttling, and performance depends directly on database efficiency.
+
+SWAGGER API DOCUMENT(PROMPT 2)
+
+openapi: 3.0.3
+info:
+  title: Product API
+  version: 1.0.0
+  description: |
+    API for retrieving products with filtering, sorting, pagination, and single product lookup.
+    Built using Express.js and a MongoDB-style model (ProductModel).
+
+servers:
+  - url: http://localhost:3000
+
+paths:
+
+  /products:
+    get:
+      summary: Get all products
+      description: Returns a paginated list of products with optional filtering, sorting, and stock checks.
+      operationId: getProducts
+
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter products by category
+
+        - name: minPrice
+          in: query
+          required: false
+          schema:
+            type: number
+          description: Minimum product price
+
+        - name: maxPrice
+          in: query
+          required: false
+          schema:
+            type: number
+          description: Maximum product price
+
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            default: createdAt
+          description: Field used for sorting results
+
+        - name: order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+          description: Sort direction
+
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Pagination page number
+
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+          description: Number of items per page
+
+        - name: inStock
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["true", "false"]
+          description: Filter only products in stock
+
+      responses:
+        "200":
+          description: Successful product list response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+              example:
+                products:
+                  - id: "64f1c2a9b1d2c3e4f5a6b7c8"
+                    name: "Wireless Mouse"
+                    price: 25.99
+                    category: "electronics"
+                    stockQuantity: 10
+                pagination:
+                  total: 120
+                  page: 1
+                  limit: 20
+                  pages: 6
+
+        "500":
+          description: Server error
+          content:
+            application/json:
+              example:
+                error: "Server error"
+                message: "Failed to fetch products"
+
+  /products/{productId}:
+    get:
+      summary: Get product by ID
+      description: Returns a single product by its unique ID
+      operationId: getProductById
+
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: MongoDB ObjectId of the product
+
+      responses:
+        "200":
+          description: Product found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+              example:
+                id: "64f1c2a9b1d2c3e4f5a6b7c8"
+                name: "Wireless Mouse"
+                price: 25.99
+                category: "electronics"
+                stockQuantity: 10
+
+        "400":
+          description: Invalid product ID format
+          content:
+            application/json:
+              example:
+                error: "Invalid ID"
+                message: "Invalid product ID format"
+
+        "404":
+          description: Product not found
+          content:
+            application/json:
+              example:
+                error: "Not found"
+                message: "Product not found"
+
+        "500":
+          description: Server error
+          content:
+            application/json:
+              example:
+                error: "Server error"
+                message: "Failed to fetch product"
+
+components:
+  schemas:
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        price:
+          type: number
+        category:
+          type: string
+        stockQuantity:
+          type: integer
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        pages:
+          type: integer
+
+
+DEVELOPERS GUIDE (PROMPT 3)
+# 📘 Product API Developer Guide
+
+## Overview
+
+This API provides access to product data with support for:
+- Filtering (category, price range, stock status)
+- Sorting (ascending/descending by any field)
+- Pagination
+- Fetching individual products by ID
+
+# 📘 Product API Developer Guide
+
+## Overview
+
+This API provides access to product data with support for:
+- Filtering (category, price range, stock status)
+- Sorting (ascending/descending by any field)
+- Pagination
+- Fetching individual products by ID
+
+
+---
+
+# 1. 🔐 Authentication
+
+## Current State
+- No authentication is required
+- All endpoints are publicly accessible
+
+## Future Improvement
+In production, authentication should be added using:
+- JWT (JSON Web Tokens)
+- API keys for service-to-service access
+
+---
+
+# 2. 📤 Request Format
+
+## GET /products
+
+### Basic Request
+```http
+GET /products
+
+RESPONCE FORMAT
+{
+  "products": [
+    {
+      "id": "64f1c2a9b1d2c3e4f5a6b7c8",
+      "name": "Wireless Mouse",
+      "price": 25.99,
+      "category": "electronics",
+      "stockQuantity": 10
+    }
+  ],
+  "pagination": {
+    "total": 120,
+    "page": 1,
+    "limit": 20,
+    "pages": 6
+  }
+}

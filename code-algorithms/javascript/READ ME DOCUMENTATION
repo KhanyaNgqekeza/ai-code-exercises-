@@ -1,0 +1,325 @@
+# 📅 EventHub
+
+## Project Description
+
+EventHub is a full-stack web application for creating, managing, and participating in events. It enables users to create events, manage attendees, handle ticket sales, send automated notifications, and track event analytics through a dashboard.
+
+The system is built with a modern web stack using Node.js, Express, MongoDB, React, and Redux, with Stripe integration for payments.
+
+---
+
+#  Features
+
+- Event creation and management
+- Attendee registration and ticket sales
+- Email notifications and reminders
+- Event check-in system
+- Analytics dashboard for organizers
+
+---
+
+#  Technologies Used
+
+- Node.js
+- Express.js
+- MongoDB
+- React
+- Redux
+- Stripe API
+- Mongoose
+- JWT Authentication
+
+---
+
+# nstallation Requirements
+
+Before running this project, ensure you have:
+
+- Node.js 14+
+- MongoDB installed and running
+- npm or yarn package manager
+- Stripe account (for payment processing)
+
+---
+
+#  Installation Instructions
+
+## 1. Clone the repository
+
+```bash
+git clone https://github.com/your-username/eventhub.git
+cd eventhub
+
+#  EventHub — Step-by-Step Guide: Creating & Publishing an Event
+
+##  Process Overview
+
+This guide explains how an organizer creates a new event, fills in required details, stores it in the system, and publishes it so users can view and register for it.
+
+The workflow includes:
+- Frontend event creation form (React)
+- Backend API request (Express)
+- Validation and database storage (MongoDB)
+- Event publishing step
+
+---
+
+##  User Level
+
+Intermediate
+
+---
+
+#  Prerequisites
+
+Before starting, ensure:
+
+- You are logged in as an **Event Organizer**
+- You have access to the Event Dashboard
+- Backend server is running (`/server`)
+- MongoDB is connected
+- You have permission to create events
+
+---
+
+#  Step-by-Step Process
+
+---
+
+## Step 1 — Open Event Dashboard
+
+Navigate to:
+
+FA DOCUMENTATION (PROMPT 3)
+# 📘 EventHub — Frequently Asked Questions (FAQ)
+
+## 📌 Overview
+
+This FAQ document helps users understand how to use EventHub, a web application for creating, managing, and attending events.
+
+It covers:
+- Getting started
+- Core features (event creation, registration, payments, check-in)
+- Troubleshooting common issues
+- Account and access-related questions
+
+---
+
+## 👤 Target Audience
+
+- Event organizers
+- Attendees/users registering for events
+- Developers integrating or maintaining the system
+
+---
+
+# 🚀 1. Getting Started
+
+---
+
+## ❓ What is EventHub?
+
+EventHub is a platform that allows users to:
+- Create events
+- Register attendees
+- Sell tickets
+- Manage check-ins
+- View event analytics
+
+---
+
+## ❓ How do I create an account?
+
+You can register by:
+1. Visiting the signup page
+2. Entering your email and password
+3. Selecting your role (Organizer or Attendee)
+4. Verifying your email
+
+---
+
+## ❓ Do I need to be logged in to use EventHub?
+
+Yes. Most features (event creation, registration, payments) require authentication.
+
+---
+
+# 🎟️ 2. Features & Functionality
+
+---
+
+## ❓ How do I create an event?
+
+1. Go to Dashboard
+2. Click “Create Event”
+3. Fill in event details (title, date, location, capacity)
+4. Click “Submit”
+5. Publish the event when ready
+
+---
+
+## ❓ What does “Draft” mean?
+
+A draft event:
+- Is saved in the system
+- Is not visible to the public
+- Can still be edited before publishing
+
+---
+
+## ❓ How do users register for events?
+
+Users can:
+1. Browse available events
+2. Click “Register”
+3. Complete payment (if required)
+4. Receive confirmation email
+
+---
+
+## ❓ How does ticket payment work?
+
+EventHub uses Stripe API to process payments securely.
+
+- Payments are handled externally via Stripe
+- EventHub stores confirmation after success
+
+---
+
+## ❓ How do event check-ins work?
+
+- Each attendee receives a QR code
+- At the event entrance, QR codes are scanned
+- Attendance is recorded in real time
+
+---
+
+## ❓ Can I edit an event after publishing?
+
+Yes, but:
+- Some fields (like date or pricing) may require admin permissions
+- Changes may affect registered attendees
+
+---
+
+# ⚠️ 3. Troubleshooting
+
+---
+
+## ❓ Why can’t I create an event?
+
+Possible reasons:
+- You are not logged in
+- You do not have organizer permissions
+- Required fields are missing
+
+---
+
+## ❓ Why is payment failing?
+
+Check:
+- Valid payment method
+- Stripe test/live mode configuration
+- Internet connection
+
+---
+
+## ❓ Why is my event not visible to users?
+
+Possible causes:
+- Event is still in “Draft” mode
+- Event was not published
+- Backend delay or caching issue
+
+---
+
+## ❓ Why am I not receiving email notifications?
+
+Check:
+- Email address is correct
+- Spam/junk folder
+- Email service configuration on server
+
+---
+
+## ❓ Why is check-in not working?
+
+Possible issues:
+- Invalid QR code
+- Event not active
+- Scanner not connected to backend
+
+---
+
+# 🔐 4. Account & Access Questions
+
+---
+
+## ❓ What roles exist in EventHub?
+
+- Organizer → Creates and manages events
+- Attendee → Registers and attends events
+
+---
+
+## ❓ Can I switch roles?
+
+Usually no. Role changes require admin support.
+
+---
+
+## ❓ Is my data secure?
+
+Yes:
+- Authentication uses secure tokens
+- Payments are handled via Stripe
+- Sensitive data is encrypted where required
+
+---
+
+# 🧠 5. Known Issues & Common Questions
+
+---
+
+## ❓ Event creation sometimes fails without explanation
+
+This usually happens due to:
+- Missing required fields
+- Backend validation failure
+
+Fix:
+- Ensure all fields are completed correctly
+
+---
+
+## ❓ “Unauthorized” error appears
+
+Cause:
+- Session expired or invalid token
+
+Fix:
+- Log out and log back in
+
+---
+
+## ❓ Event capacity issues
+
+Cause:
+- Overbooking prevention logic
+
+Fix:
+- Increase capacity before publishing event
+
+---
+
+# 🧾 Summary
+
+EventHub is designed to simplify event management by combining:
+
+- Event creation tools
+- Secure payments
+- Attendee tracking
+- Real-time event operations
+
+If issues persist, check backend logs or contact system support.
+

@@ -1,0 +1,43 @@
+MY UNDERSTANDING OF THE TASK PRIORITY AND SORTING SYSTEM. 
+
+The feature calculates the importance score for each task using multiple factors then sorts out the tasks using the score 
+
+A list of task 
+    |
+CalculateTaskScore
+    |
+Each task is given a score
+    |
+    sortTaskByImportance()
+    |
+Task is filtered and sorted from highest score to lowest score
+    |
+Top task is displayed
+
+in my understanding that each task gets a score made up of multiple parts. Namely base priority, due date, status , tag boost and activity boost
+
+Base Priority(low, medium, high and urgent) - this is the starting point
+
+urgency - task closer to deadlines become more important
+
+status score- tasks that are completed or waiting for a review are oushed to the bottom
+
+Tag Boost - manual urgency increase score
+
+Activity Boost - recently active tasks are semi prioritized
+
+in  my understanding
+score = priority + due date factor - status + tag boost + update boost
+
+meanwhile, sorting logic is by score descending. highest score comes first and lowest score comes last
+
+Multiple signals influence priority and not one field. Sorting is also not fixed
+
+MY INSIGHTS AND LEARNING POINTS
+After reviewing the AI explanation and tracing the code, this is my understanding about the system.
+
+Mi initail assumption was the task ordeing was based on the priority field (low to urgent) and ehat I've learnt is priority is the starting weight and not the final factore
+
+This system  transformd simple task data into a priority ranking using rule based scoring that combines priority, time, status, tags and activity into a computed score
+
+
