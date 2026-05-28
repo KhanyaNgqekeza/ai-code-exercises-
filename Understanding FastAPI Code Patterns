@@ -1,0 +1,8 @@
+Why This Matches Existing Patterns
+Existing Pattern	Logging Feature Uses Same Pattern
+SQLAlchemy models	AuditLog ORM model
+Pydantic schemas	AuditLogResponse
+Dependency injection	Depends(get_db)
+Router organization	logs.py router
+Service abstraction	logging_service.py
+ORM relationships	user = relationship("User")

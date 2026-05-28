@@ -1,0 +1,11 @@
+| Traditional Framework (Django / ASP.NET MVC) | FastAPI Equivalent                               | Mental Shift                                       |
+| -------------------------------------------- | ------------------------------------------------ | -------------------------------------------------- |
+| Controllers                                  | Path operations (`@app.get`, `@router.post`)     | No controller layer — functions ARE the controller |
+| Views                                        | Endpoint functions                               | Views are just Python functions                    |
+| Models (ORM models)                          | Pydantic models + optional ORM (SQLAlchemy)      | Models are separated: validation ≠ database        |
+| Middleware                                   | FastAPI middleware (`app.add_middleware`)        | Same concept, but lighter + more explicit          |
+| Routing system                               | Decorators (`@app.get("/path")`)                 | Routes are defined inline with functions           |
+| Request/Response objects                     | Function parameters + return dict/Pydantic model | No heavy request object handling                   |
+| Services layer (optional)                    | Plain Python functions/modules                   | Encouraged, but not enforced                       |
+| Dependency injection (limited)               | `Depends()` system                               | Built-in and very powerful DI system               |
+| Configuration files                          | Python variables / settings classes              | No rigid config system required                    |

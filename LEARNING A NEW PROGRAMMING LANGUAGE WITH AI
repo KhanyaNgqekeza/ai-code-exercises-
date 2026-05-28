@@ -1,0 +1,129 @@
+MY LANGUAGE OF PROFICIENCY IS C# AND IN THE CASE OF THESE EXERCISES ITS JavaScript
+
+Goals:
+Build REST APIs using Python 
+Perform data analysis and visualization using Python
+Understand Python for AI/automation tasks (basic machine learning + scripting)
+2. Structured Learning Journey Plan (Python)
+Phase 1: Python Fundamentals
+
+Prerequisites:
+
+Basic programming knowledge (variables, loops, functions in C#)
+
+Learning Steps:
+
+Learn Python syntax (indentation, variables, data types)
+Practice control structures (if, loops, match)
+Learn functions and modules
+Understand lists, dictionaries, tuples
+File handling basics
+
+Verification Activities:
+
+Convert a simple C# console program into Python
+Write a program that reads a file and counts words
+Build a small calculator CLI app
+ Phase 2: Object-Oriented Programming in Python
+
+Prerequisites:
+
+Comfortable with basic Python syntax
+
+Learning Steps:
+
+Classes and objects in Python
+Constructors (__init__)
+Inheritance and polymorphism
+Encapsulation and properties
+Difference between Python OOP and C# OOP
+
+Verification Activities:
+
+Create a simple “Bank Account” class system
+Build a student management system
+Convert a C# class-based project into Python
+Phase 3: Web Development (REST APIs)
+
+Prerequisites:
+
+OOP + basic Python knowledge
+
+Learning Steps:
+
+Learn HTTP methods (GET, POST, PUT, DELETE)
+Understand REST API structure
+Learn Flask or FastAPI framework
+Work with JSON responses
+Connect to a simple database (SQLite)
+
+Verification Activities:
+
+Build a basic to-do API
+Create a user registration/login API
+Test endpoints using Postman
+ Phase 4: Data + Automation / Intro to AI
+
+Prerequisites:
+
+Comfortable building APIs and Python OOP
+
+Learning Steps:
+
+Learn Pandas for data analysis
+Learn Matplotlib for visualization
+Automate simple tasks (file renaming, scraping basics)
+Intro to machine learning (scikit-learn basics)
+
+Verification Activities:
+
+Analyze a CSV dataset and create graphs
+Build a simple data dashboard
+Create a basic prediction model (e.g. house price prediction)
+
+
+STEP 1:
+I'm currently proficient in C# and want to learn Python.
+
+Before diving into code:
+
+What are the key philosophical differences between C# and Python?
+What problems was Python designed to solve compared to C#?
+What mental models should I adjust coming from C#?
+What are common misconceptions C# developers have about Python?
+
+STEP 2:
+How functions are implemented in Python
+How they compare to methods in C# (static and instance methods)
+The key syntax and structures I need to understand (def, return, parameters, indentation rules)
+Common patterns and best practices when writing functions in Python
+
+STEP 3:
+Could you guide me through creating a simple example, such as a basic calculator function that adds two numbers and returns the result?
+
+Please explain each part of the syntax, especially:
+
+How Python function definitions differ from C# methods
+How parameters and return values work in Python vs C#
+Why Python uses indentation instead of braces
+Any key mental shifts I need to make coming from C#
+
+STEP 4:
+I've created this Python implementation:
+
+def add_numbers(a, b):
+    result = a + b
+    return result
+
+
+print(add_numbers(5, 3))
+
+Could you:
+
+Verify if I've followed Python best practices?
+Explain any improvements I should make?
+Suggest what I should learn next?
+Point out any C# habits that might be showing in my code?
+
+AI answered that i have followed python rules and syntax correctly
+
